@@ -132,6 +132,7 @@ da2$date2.act[da2$n.act < 300] <- da2$doy2.act[da2$n.act < 300] <- NA
 da2$y <- 1
 da2$winter.act <- as.numeric(da2$date2.act) - as.numeric(da2$date1.act)
 da2$winter.lon <- as.numeric(da2$date2.lon) - as.numeric(da2$date1.lon)
+da2 <- merge(da2, sex, by.x = "animal_id", by.y = "id")
 
 plot(da2$doy1.act,da2$doy1.lon)
 lines(c(0,1000),c(0,1000))
@@ -225,6 +226,60 @@ mtext("saltwater switch",1,line=-1.5)
 mtext("longitude",3,line=-1.5)
 par(opar)
 dev.off()
+
+
+
+Sys.setlocale("LC_ALL", "English") 
+png("figures/departure and arrival densities by sex.png",units = "cm",width=20,height=12,res = 600)
+dd1.m <- density(da2$doy1.lon[!is.na(da2$doy1.lon) & da2$sex == "m"])
+dd2.m <- density(da2$doy2.lon[!is.na(da2$doy2.lon) & da2$sex == "m"])
+dda1.m <- density(da2$doy1.act[!is.na(da2$doy1.act) & da2$sex == "m"])
+dda2.m <- density(da2$doy2.act[!is.na(da2$doy2.act) & da2$sex == "m"])
+
+dd1.f <- density(da2$doy1.lon[!is.na(da2$doy1.lon) & da2$sex == "f"])
+dd2.f <- density(da2$doy2.lon[!is.na(da2$doy2.lon) & da2$sex == "f"])
+dda1.f <- density(da2$doy1.act[!is.na(da2$doy1.act) & da2$sex == "f"])
+dda2.f <- density(da2$doy2.act[!is.na(da2$doy2.act) & da2$sex == "f"])
+
+m <- data.frame(dy=0:600,date=as.Date(0:600,"2010-01-01"))
+m$year  <- as.numeric(strftime(m$date,"%Y"))
+m$month <- as.numeric(strftime(m$date,"%m"))
+m2 <- m[!duplicated(paste(m$month,m$year)),]
+
+opar <- par(mfrow=c(1,1),mar=c(2,4,2,0))
+plot(dd1.m$x,dd1$y,type="l",xaxt="n",ylab="density",col=4,
+     xlim=c(150,550),ylim=c(-0.055,0.055),yaxt="n")
+abline(h=0)
+lines(dd2.m$x+365,dd2.m$y, col=4)
+lines(dda1.m$x,-dd2.m$y, col=4)
+lines(dda2.m$x+365,-dd2.m$y, col=4)
+
+lines(dd1.f$x,dd1.f$y, col=2)
+lines(dd2.f$x+365,dd2.f$y, col=2)
+lines(dda1.f$x,-dd2.f$y, col=2)
+lines(dda2.f$x+365,-dd2.f$y, col=2)
+
+axis(2,at=seq(-0.04,0.04,0.02),labels = abs(seq(-0.04,0.04,0.02)))
+axis(1,at=m2$dy,labels = strftime(m2$date,"%b"))
+axis(3,at=m2$dy,labels = strftime(m2$date,"%b"))
+mtext("saltwater switch",1,line=-1.5)
+mtext("longitude",3,line=-1.5)
+par(opar)
+dev.off()
+
+
+
+png("figures/winter period length by sex.png",units = "cm",width=15,height=10,res = 500)
+opar <- par(mfrow=c(1,1),mar=c(4,4,4,1))
+boxplot(da2$winter.lon[!duplicated(da2$animal_id) & da2$sex == "m"],horizontal = T, at=1.15,boxwex=0.5,xlim=c(0.5,2.5),ylim=c(150,270), xlab="length [days]", border=4, col=grey(1))
+boxplot(da2$winter.act[!duplicated(da2$animal_id) & da2$sex == "m"],horizontal = T, at=2.15,boxwex=0.5,add=T, border=4, col=grey(1))
+boxplot(da2$winter.lon[!duplicated(da2$animal_id) & da2$sex == "f"],horizontal = T, at=0.85,boxwex=0.5,add=T, border=2, col=grey(1))
+boxplot(da2$winter.act[!duplicated(da2$animal_id) & da2$sex == "f"],horizontal = T, at=1.85,boxwex=0.5,add=T, border=2, col=grey(1))
+axis(2, at=1:2, labels = c("longitude","saltwater switch"))
+# axis(3, at=c(0,365*0.25, 365/2,365*0.75,365), labels = c(0,0.25,0.5,0.75,1))
+par(opar)
+dev.off()
+
 
 
 png("figures/winter period length 2.png",units = "cm",width=15,height=10,res = 500)

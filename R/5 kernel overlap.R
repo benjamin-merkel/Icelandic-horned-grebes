@@ -54,7 +54,7 @@ test.pixel <- SpatialPixels(test.point,proj4string = proj.aezd, round = NULL, gr
 test.raster<- raster(extent(test.grid),crs=proj.aezd,resolution=25)
 
 
-
+sex <- read.table("sexing.txt", header = T)
 
 
 ## run if you did not already
@@ -84,6 +84,8 @@ test.raster<- raster(extent(test.grid),crs=proj.aezd,resolution=25)
 load("output/kernel vertices.RData")
 load("output/kernel UD.RData")
 
+ki$sex <- NA
+for(i in 1:nrow(ki)) if(length(sex$sex[sex$id == ki$animal_id[i]])) ki$sex[i] <- sex$sex[sex$id == ki$animal_id[i]]
 
 ol <- kerneloverlaphr(kj,method = "BA",percent = 75)
 ol[upper.tri(ol,diag = T)] <- NA
@@ -128,19 +130,31 @@ ter.col  <- c(colorRampPalette(c('beige', terrain.colors(10)[1]))(100))
 ter.col  <- colorRampPalette(c('beige', "khaki4"))(100)
 #ter.col <- terrain.colors(100,rev = T)
 bird.col <- rainbow(19)#hcl.colors(19, palette = "viridis")
+f.col <- colorRampPalette(brewer.pal(9, "OrRd")[3:9])(13)
+m.col <- brewer.pal(8, "Blues")[3:8]
 
-png("figures/winter 75 kernels 3.png",res=700,units="cm",width=20,height=20*1.27)
+
+png("figures/winter 75 kernels 4.png",res=700,units="cm",width=20,height=20*1.27)
 opar=par(mar=c(rep(1,4)))
 image(bath3,asp=1,col=bath.col,ann=F,axes=F)
 #plot(bath3,col=bath.col,maxpixels=1e10,interpolate=T,legend=F,add=T)
-contour(bath3,levels=c(-500,-200),add=T,col=c('skyblue4'),lty=1,lwd=0.7,labels=c("-500 m","-200 m"))
-plot(land,col=ter.col[1],border=grey(0.55),lwd=1,add=T)
-plot(batht,col=ter.col,add=T,legend=F)
-plot(land,col="transparent",border=grey(0.55),lwd=1,add=T)
+contour(-bath3,levels=c(500,200),add=T, col=grey(0.6),lty=1,lwd=0.5,labels=c("500 m","200 m"))
+# plot(land,col=ter.col[1],border=grey(0.55),lwd=1,add=T)
+# plot(batht,col=ter.col,add=T,legend=F)
+# plot(land,col="transparent",border=grey(0.55),lwd=1,add=T)
+plot(land,col=grey(1),border=grey(0.35),lwd=0.8,add=T)
 plot(grat5,col=grey(0.8),lwd=1.3,add=T)
-for(id in 1:length(unique(ki$animal_id))){
-  ki2 <- ki[ki$animal_id == sort(unique(ki$animal_id),decreasing = F)[id] & ki$kernel == 75,]
-  for(i2 in 1:nrow(ki2)) plot(ki2[i2,],lwd=2,lty=i2,add=T,border=bird.col[id],col=adjustcolor(bird.col[id],0.3))
+ids <- unique(ki$animal_id[ki$sex=="m"])
+ids <- ids[!is.na(ids)]
+for(id in 1:length(ids)){
+  ki2 <- ki[ki$animal_id == sort(ids, decreasing = F)[id] & ki$kernel == 75,]
+  for(i2 in 1:nrow(ki2)) plot(ki2[i2,],lwd=2,lty=i2,add=T,border=m.col[id],col=adjustcolor(m.col[id],0.3))
+}
+ids <- unique(ki$animal_id[ki$sex=="f"])
+ids <- ids[!is.na(ids)]
+for(id in 1:length(ids)){
+  ki2 <- ki[ki$animal_id == sort(ids, decreasing = T)[id] & ki$kernel == 75,]
+  for(i2 in 1:nrow(ki2)) plot(ki2[i2,],lwd=2,lty=i2,add=T,border=f.col[id],col=adjustcolor(f.col[id],0.3))
 }
 plot(colony, pch = 23, cex = 1.5, bg = "gold",add=T) # adding the release location
 
